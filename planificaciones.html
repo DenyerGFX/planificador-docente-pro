@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Proyectos de Aprendizaje y planificaciones diarias guardadas.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Mis Archivos | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header no-print"><div class="container">
+      <a class="brand" href="dashboard.html"><span class="brand-mark">PD</span><span>Planificador Pro Docente</span></a>
+      <div class="header-actions"><a class="btn btn-primary" href="proyecto.html">Crear proyecto</a><a class="btn btn-outline" href="dashboard.html">Volver al inicio</a></div>
+    </div></header>
+    <main class="container page-main">
+      <section class="hero glass no-print"><p class="eyebrow">Biblioteca docente</p><h1>Mis archivos</h1><p>Consulta tus P.A. y las unidades diarias vinculadas.</p></section>
+      <nav class="tabs glass no-print" aria-label="Tipo de archivo">
+        <button class="tab active" data-target="proyectos" type="button">📋 Proyectos de Aprendizaje</button>
+        <button class="tab" data-target="diarias" type="button">📅 Planificaciones Diarias</button>
+      </nav>
+      <section id="proyectos" class="tab-content active"><div id="lista-proyectos" class="grid"></div></section>
+      <section id="diarias" class="tab-content"><div id="lista-diarias" class="grid"></div></section>
+    </main>
+    <footer class="site-footer no-print"><div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div></footer>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./js/supabase-client.js";
+    import { protegerRuta } from "./js/auth.js";
+    import { initTheme } from "./js/theme.js";
+    import { showToast } from "./js/toast.js";
+    import { agregarBotonPlanDiaria, copiarContenido, descargarWord, imprimirComoPDF } from "./js/proyecto.js";
+
+    initTheme();
+    const tabs = [...document.querySelectorAll(".tab")];
+    const secciones = [...document.querySelectorAll(".tab-content")];
+
+    function activarTab(id) {
+      tabs.forEach(tab => tab.classList.toggle("active", tab.dataset.target === id));
+      secciones.forEach(seccion => seccion.classList.toggle("active", seccion.id === id));
+      history.replaceState(null, "", `?tab=${id}`);
+    }
+    tabs.forEach(tab => tab.addEventListener("click", () => activarTab(tab.dataset.target)));
+
+    function abrirDetalle(item) {
+      const modal = document.createElement("div");
+      modal.className = "modal";
+      const contenido = document.createElement("div");
+      contenido.className = "modal-content glass";
+      const acciones = document.createElement("div");
+      acciones.className = "action-row no-print p-3";
+      const cerrar = document.createElement("button");
+      cerrar.className = "btn btn-danger";
+      cerrar.type = "button";
+      cerrar.textContent = "Cerrar";
+      cerrar.addEventListener("click", () => modal.remove());
+      const copiar = document.createElement("button");
+      copiar.className = "btn btn-secondary";
+      copiar.type = "button";
+      copiar.textContent = "Copiar";
+      const word = document.createElement("button");
+      word.className = "btn btn-secondary";
+      word.type = "button";
+      word.textContent = "Word";
+      const pdf = document.createElement("button");
+      pdf.className = "btn btn-secondary";
+      pdf.type = "button";
+      pdf.textContent = "PDF";
+      const documento = document.createElement("article");
+      documento.className = "document-preview";
+      documento.innerHTML = item.contenido_html;
+      copiar.addEventListener("click", () => copiarContenido(documento));
+      word.addEventListener("click", () => descargarWord(documento, item.titulo));
+      pdf.addEventListener("click", imprimirComoPDF);
+      acciones.append(cerrar, copiar, word, pdf);
+      contenido.append(acciones, documento);
+      modal.appendChild(contenido);
+      modal.addEventListener("click", event => {
+        if (event.target === modal) modal.remove();
+      });
+      document.body.appendChild(modal);
+    }
+
+    function crearCard(item) {
+      const card = document.createElement("article");
+      card.className = "card";
+      const titulo = document.createElement("h2");
+      titulo.className = "h4";
+      titulo.textContent = item.titulo;
+      const grado = document.createElement("p");
+      grado.textContent = `📚 Grado: ${item.grado}°`;
+      const area = document.createElement("p");
+      area.textContent = `📖 Área: ${item.area}`;
+      const fecha = document.createElement("p");
+      fecha.textContent = `🗓️ ${item.fecha_clase || new Date(item.created_at).toLocaleDateString("es-VE")}`;
+      const acciones = document.createElement("div");
+      acciones.className = "action-row";
+      const ver = document.createElement("button");
+      ver.className = "btn btn-secondary";
+      ver.type = "button";
+      ver.textContent = "Ver archivo";
+      ver.addEventListener("click", () => abrirDetalle(item));
+      acciones.appendChild(ver);
+      if (item.tipo === "proyecto_pa") agregarBotonPlanDiaria(item.id, item.titulo, acciones);
+      card.append(titulo, grado, area, fecha, acciones);
+      return card;
+    }
+
+    async function cargar() {
+      try {
+        const { data, error } = await supabase
+          .from("planificaciones")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        const proyectos = (data || []).filter(item => item.tipo === "proyecto_pa");
+        const diarias = (data || []).filter(item => item.tipo === "clase");
+        const destinos = [
+          [document.getElementById("lista-proyectos"), proyectos, "Aún no tienes proyectos."],
+          [document.getElementById("lista-diarias"), diarias, "Aún no tienes planificaciones diarias."]
+        ];
+        destinos.forEach(([contenedor, items, vacio]) => {
+          contenedor.innerHTML = "";
+          if (!items.length) {
+            const mensaje = document.createElement("p");
+            mensaje.textContent = vacio;
+            contenedor.appendChild(mensaje);
+          } else {
+            items.forEach(item => contenedor.appendChild(crearCard(item)));
+          }
+        });
+      } catch (error) {
+        console.error("Error al cargar archivos:", error);
+        showToast("No pudimos cargar tus archivos.", "error");
+      }
+    }
+
+    protegerRuta(cargar);
+    const tabInicial = new URLSearchParams(location.search).get("tab");
+    if (["proyectos", "diarias"].includes(tabInicial)) activarTab(tabInicial);
+  </script>
+</body>
+</html>

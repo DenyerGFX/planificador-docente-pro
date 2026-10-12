@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Administración manual de pagos y membresías.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Administración | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header"><div class="container">
+      <a class="brand" href="dashboard.html"><span class="brand-mark">PD</span><span>Administración</span></a>
+      <div class="header-actions"><a class="btn btn-outline" href="dashboard.html">Volver al inicio</a></div>
+    </div></header>
+    <main class="container page-main">
+      <section class="hero glass">
+        <p class="eyebrow">Acceso restringido</p>
+        <h1>Revisión manual de pagos</h1>
+        <p>Verifica el comprobante y la referencia antes de aprobar. La aprobación activa automáticamente el plan solicitado.</p>
+      </section>
+      <div class="card table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Docente</th><th>Fecha</th><th>Plan</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Comprobante</th><th>Acciones</th></tr></thead>
+          <tbody id="pagos-pendientes"><tr><td colspan="8">Cargando pagos…</td></tr></tbody>
+        </table>
+      </div>
+    </main>
+    <footer class="site-footer"><div class="footer-line">© 2026 Planificador Pro Docente.</div></footer>
+  </div>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

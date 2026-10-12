@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Planes y registro manual de pagos de Planificador Pro Docente.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Planes | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header">
+      <div class="container">
+        <a class="brand" href="dashboard.html"><span class="brand-mark">PD</span><span>Planificador Pro Docente</span></a>
+        <div class="header-actions"><a class="btn btn-outline" href="dashboard.html">Volver al inicio</a></div>
+      </div>
+    </header>
+    <main class="container page-main">
+      <section class="hero glass">
+        <p class="eyebrow">Membresías</p>
+        <h1>Elige el plan que acompaña tu trabajo</h1>
+        <p>Los pagos Pro e Institucional se verifican manualmente. Tu plan cambia después de que el administrador aprueba el comprobante.</p>
+      </section>
+
+      <section>
+        <div id="planes-grid" class="grid action-grid"><p>Cargando planes…</p></div>
+      </section>
+
+      <section aria-labelledby="datos-pago-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">Datos de pago</p><h2 id="datos-pago-title">¿Dónde realizar el pago?</h2></div>
+        </div>
+        <div class="grid payment-grid">
+          <article class="card payment-card">
+            <h3>Pago Móvil</h3>
+            <p>Para Docente Pro, paga en bolívares el equivalente a US$5 según la tasa BCV vigente del día.</p>
+            <dl class="payment-data">
+              <div><dt>Banco</dt><dd><strong>Mercantil (0105)</strong></dd></div>
+              <div><dt>Teléfono</dt><dd><strong>0424-5667184</strong> <button class="copy-payment" type="button" data-copy="04245667184" aria-label="Copiar teléfono">Copiar</button></dd></div>
+              <div><dt>Cédula</dt><dd><strong>V-14.614.485</strong> <button class="copy-payment" type="button" data-copy="14614485" aria-label="Copiar cédula">Copiar</button></dd></div>
+            </dl>
+          </article>
+          <article class="card payment-card">
+            <h3>Binance Pay</h3>
+            <dl class="payment-data">
+              <div><dt>Binance ID</dt><dd><strong>1271968412</strong> <button class="copy-payment" type="button" data-copy="1271968412" aria-label="Copiar Binance ID">Copiar</button></dd></div>
+            </dl>
+            <p>Envía el equivalente del plan seleccionado mediante Binance Pay.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section-heading"><div><p class="eyebrow">Activación manual</p><h2>Enviar comprobante</h2></div></section>
+      <form id="pago-form" class="form-card form-layout" enctype="multipart/form-data">
+        <p>Después de pagar, registra la operación y adjunta el comprobante. El acceso se activa cuando el administrador verifica el pago.</p>
+        <div class="form-group">
+          <label for="plan-id">Plan solicitado</label>
+          <select id="plan-id" name="plan_id" required><option value="">Seleccione un plan</option></select>
+        </div>
+        <div class="form-group">
+          <label for="metodo">Método de pago</label>
+          <select id="metodo" name="metodo" required>
+            <option value="">Seleccione</option>
+            <option value="Pago Móvil">Pago Móvil</option>
+            <option value="Binance Pay">Binance Pay</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="referencia">Referencia de la operación</label>
+          <input id="referencia" name="referencia" type="text" maxlength="120" required>
+        </div>
+        <div class="form-group">
+          <label for="comprobante">Comprobante JPG, PNG, WEBP o PDF</label>
+          <input id="comprobante" name="comprobante" type="file" accept=".jpg,.jpeg,.png,.webp,.pdf" required>
+        </div>
+        <button id="enviar-pago" class="btn btn-primary" type="submit">Enviar comprobante</button>
+      </form>
+    </main>
+    <footer class="site-footer"><div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div></footer>
+  </div>
+
+  <script type="module">
+    import { protegerRuta } from "./js/auth.js";
+    import { initTheme } from "./js/theme.js";
+    import { listarPlanes, subirComprobante } from "./js/membresias.js";
+
+    initTheme();
+    const grid = document.getElementById("planes-grid");
+    const selector = document.getElementById("plan-id");
+    let planes = [];
+
+    function limite(valor) {
+      return valor === null || valor >= 9999 ? "Sin límite práctico" : valor;
+    }
+
+    function renderizarPlanes() {
+      grid.innerHTML = "";
+      selector.innerHTML = '<option value="">Seleccione un plan</option>';
+      planes.forEach(plan => {
+        const card = document.createElement("article");
+        card.className = "card plan-card";
+        card.innerHTML = `
+          <p class="eyebrow">${plan.id === "free" ? "Para comenzar" : "Más capacidad"}</p>
+          <h2>${plan.nombre}</h2>
+          <div class="price">$${Number(plan.precio_usd).toFixed(2)}${plan.duracion_dias === 30 ? '<small> / mes</small>' : ''}</div>
+          <p>${plan.descripcion || ""}</p>
+          <ul>
+            <li>${limite(plan.limite_pa_mes)} P.A. al mes</li>
+            <li>${limite(plan.limite_clases_mes)} clases al mes</li>
+            <li>${plan.permite_pdf ? "Descarga PDF incluida" : "Sin descarga PDF"}</li>
+          </ul>`;
+        if (plan.id !== "free") {
+          const boton = document.createElement("button");
+          boton.className = "btn btn-primary";
+          boton.type = "button";
+          boton.textContent = "Elegir este plan";
+          boton.addEventListener("click", () => {
+            selector.value = plan.id;
+            document.getElementById("pago-form").scrollIntoView({ behavior: "smooth" });
+          });
+          card.appendChild(boton);
+          const opcion = document.createElement("option");
+          opcion.value = plan.id;
+          opcion.textContent = `${plan.nombre} · $${Number(plan.precio_usd).toFixed(2)}`;
+          selector.appendChild(opcion);
+        }
+        grid.appendChild(card);
+      });
+    }
+
+    protegerRuta(async () => {
+      planes = await listarPlanes();
+      renderizarPlanes();
+    });
+
+    document.querySelectorAll(".copy-payment").forEach(button => {
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(button.dataset.copy);
+          const original = button.textContent;
+          button.textContent = "Copiado";
+          window.setTimeout(() => { button.textContent = original; }, 1200);
+        } catch {
+          button.textContent = "No se pudo copiar";
+        }
+      });
+    });
+
+    document.getElementById("pago-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const boton = document.getElementById("enviar-pago");
+      const fd = new FormData(event.currentTarget);
+      boton.disabled = true;
+      const pago = await subirComprobante({
+        archivo: fd.get("comprobante"),
+        planId: fd.get("plan_id"),
+        metodo: fd.get("metodo"),
+        referencia: fd.get("referencia")
+      });
+      boton.disabled = false;
+      if (pago) event.currentTarget.reset();
+    });
+  </script>
+</body>
+</html>

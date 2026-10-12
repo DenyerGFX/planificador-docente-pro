@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Perfil, suscripción, uso e historial de pagos.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Mi Cuenta | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header"><div class="container">
+      <a class="brand" href="dashboard.html"><span class="brand-mark">PD</span><span>Planificador Pro Docente</span></a>
+      <div class="header-actions"><a class="btn btn-secondary" href="planes.html">Ver planes</a><a class="btn btn-outline" href="dashboard.html">Volver al inicio</a></div>
+    </div></header>
+    <main class="container page-main">
+      <section class="hero glass"><p class="eyebrow">Mi cuenta</p><h1>Perfil y membresía</h1><p>Actualiza tus datos docentes y consulta el consumo del mes.</p></section>
+
+      <div class="stats-grid">
+        <article class="glass stat-card"><span class="eyebrow">Plan actual</span><strong id="plan" class="stat-value">Cargando…</strong><p id="estado-plan"></p></article>
+        <article class="glass stat-card"><span class="eyebrow">P.A. generados</span><strong id="uso-pa" class="stat-value">—</strong></article>
+        <article class="glass stat-card"><span class="eyebrow">Clases generadas</span><strong id="uso-clases" class="stat-value">—</strong></article>
+      </div>
+
+      <section class="section-heading"><div><p class="eyebrow">Datos docentes</p><h2>Mi perfil</h2></div></section>
+      <form id="perfil-form" class="form-card form-layout">
+        <div class="form-group"><label for="nombre">Nombre completo</label><input id="nombre" name="nombre_completo" required></div>
+        <div class="field-grid">
+          <div class="form-group"><label for="cedula">Cédula</label><input id="cedula" name="cedula"></div>
+          <div class="form-group"><label for="grado">Grado que imparte</label><input id="grado" name="grado_imparte"></div>
+          <div class="form-group"><label for="escuela">Escuela</label><input id="escuela" name="escuela"></div>
+          <div class="form-group"><label for="municipio">Municipio</label><input id="municipio" name="municipio"></div>
+          <div class="form-group"><label for="estado">Estado</label><input id="estado" name="estado"></div>
+        </div>
+        <button class="btn btn-primary" type="submit">Guardar cambios</button>
+      </form>
+
+      <section class="section-heading"><div><p class="eyebrow">Pagos manuales</p><h2>Historial de pagos</h2></div></section>
+      <div class="card table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Fecha</th><th>Método</th><th>Referencia</th><th>Monto</th><th>Estado</th></tr></thead>
+          <tbody id="pagos-body"><tr><td colspan="5">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </main>
+    <footer class="site-footer"><div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div></footer>
+  </div>
+
+  <script type="module">
+    import { protegerRuta, obtenerPerfil, actualizarPerfil } from "./js/auth.js";
+    import { obtenerResumenMembresia, listarPagosUsuario } from "./js/membresias.js";
+    import { initTheme } from "./js/theme.js";
+
+    initTheme();
+    const form = document.getElementById("perfil-form");
+
+    function celda(fila, texto) {
+      const td = document.createElement("td");
+      td.textContent = texto;
+      fila.appendChild(td);
+    }
+
+    protegerRuta(async () => {
+      const [perfil, resumen, pagos] = await Promise.all([
+        obtenerPerfil(),
+        obtenerResumenMembresia(),
+        listarPagosUsuario()
+      ]);
+      if (perfil) {
+        Object.entries(perfil).forEach(([campo, valor]) => {
+          const control = form.elements.namedItem(campo);
+          if (control) control.value = valor ?? "";
+        });
+      }
+      if (resumen) {
+        document.getElementById("plan").textContent = resumen.plan.nombre;
+        document.getElementById("estado-plan").textContent = `Estado: ${resumen.suscripcion.estado}`;
+        document.getElementById("uso-pa").textContent = `${resumen.uso.pa_generados} de ${resumen.plan.limite_pa_mes ?? "∞"}`;
+        document.getElementById("uso-clases").textContent = `${resumen.uso.clases_generadas} de ${resumen.plan.limite_clases_mes ?? "∞"}`;
+      }
+      const body = document.getElementById("pagos-body");
+      body.innerHTML = "";
+      if (!pagos.length) {
+        body.innerHTML = '<tr><td colspan="5">No tienes pagos registrados.</td></tr>';
+      } else {
+        pagos.forEach(pago => {
+          const fila = document.createElement("tr");
+          celda(fila, new Date(pago.created_at).toLocaleDateString("es-VE"));
+          celda(fila, pago.metodo);
+          celda(fila, pago.referencia || "—");
+          celda(fila, `$${Number(pago.monto_usd).toFixed(2)}`);
+          const estado = document.createElement("td");
+          estado.innerHTML = `<span class="status-badge status-${pago.estado}">${pago.estado}</span>`;
+          fila.appendChild(estado);
+          body.appendChild(fila);
+        });
+      }
+    });
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      await actualizarPerfil(Object.fromEntries(new FormData(form).entries()));
+    });
+  </script>
+</body>
+</html>

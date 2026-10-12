@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel principal de Planificador Pro Docente.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Inicio | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header">
+      <div class="container">
+        <a class="brand" href="dashboard.html">
+          <span class="brand-mark" aria-hidden="true">PD</span>
+          <span>Planificador Pro Docente</span>
+        </a>
+        <div class="header-actions">
+          <span id="nombre-docente">Cargando perfil…</span>
+          <a id="admin-link" class="btn btn-outline is-hidden" href="admin.html">Administración</a>
+          <button id="theme-toggle" class="btn btn-secondary" type="button" aria-label="Cambiar tema">◐ Tema</button>
+          <button id="logout-button" class="btn btn-danger" type="button">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="container page-main">
+      <section class="hero glass">
+        <p class="eyebrow">Panel docente</p>
+        <h1 id="saludo">¡Hola, docente!</h1>
+        <p>Organiza tus Proyectos de Aprendizaje y unidades diarias con los contenidos oficiales del MPPE.</p>
+      </section>
+
+      <section aria-labelledby="accesos-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Accesos rápidos</p>
+            <h2 id="accesos-title">¿Qué deseas hacer?</h2>
+          </div>
+        </div>
+        <div class="grid action-grid">
+          <a class="card action-card" href="proyecto.html">
+            <span class="action-icon" aria-hidden="true">📋</span>
+            <h3>Crear Proyecto</h3>
+            <p>Genera un P.A. con el formato oficial Portuguesa 2025-2026.</p>
+          </a>
+          <a class="card action-card" href="planificacion-diaria.html">
+            <span class="action-icon" aria-hidden="true">📅</span>
+            <h3>Crear Clase Diaria</h3>
+            <p>Selecciona un P.A. y desarrolla una Unidad Diaria de Clase.</p>
+          </a>
+          <a class="card action-card" href="planificaciones.html">
+            <span class="action-icon" aria-hidden="true">📁</span>
+            <h3>Mis Archivos</h3>
+            <p>Consulta tus proyectos y planificaciones guardadas.</p>
+          </a>
+          <a class="card action-card" href="cuenta.html">
+            <span class="action-icon" aria-hidden="true">👤</span>
+            <h3>Mi Cuenta</h3>
+            <p>Revisa tu perfil, plan, consumo e historial de pagos.</p>
+          </a>
+          <a class="card action-card" href="planes.html">
+            <span class="action-icon" aria-hidden="true">💳</span>
+            <h3>Planes</h3>
+            <p>Compara planes y envía un comprobante para revisión.</p>
+          </a>
+        </div>
+      </section>
+
+      <section aria-labelledby="resumen-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Este mes</p>
+            <h2 id="resumen-title">Plan y uso</h2>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <article class="glass stat-card">
+            <span class="eyebrow">Suscripción</span>
+            <strong id="plan-nombre" class="stat-value">Cargando…</strong>
+            <p id="plan-estado">Consultando estado</p>
+          </article>
+          <article class="glass stat-card">
+            <span class="eyebrow">Proyectos de Aprendizaje</span>
+            <strong id="uso-pa" class="stat-value">0 de 0</strong>
+            <div class="progress" aria-hidden="true"><span id="barra-pa" style="width:0"></span></div>
+          </article>
+          <article class="glass stat-card">
+            <span class="eyebrow">Clases diarias</span>
+            <strong id="uso-clases" class="stat-value">0 de 0</strong>
+            <div class="progress" aria-hidden="true"><span id="barra-clases" style="width:0"></span></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-line">📧 <a href="mailto:denyersequera2511@gmail.com">denyersequera2511@gmail.com</a></div>
+      <div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div>
+    </footer>
+  </div>
+
+  <script type="module" src="js/dashboard.js"></script>
+</body>
+</html>

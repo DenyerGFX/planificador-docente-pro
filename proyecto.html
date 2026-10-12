@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Genera un Proyecto de Aprendizaje con el formato oficial del CDCE Portuguesa.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Crear Proyecto | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header no-print">
+      <div class="container">
+        <a class="brand" href="dashboard.html">
+          <span class="brand-mark">PD</span>
+          <span>Planificador Pro Docente</span>
+        </a>
+        <div class="header-actions">
+          <a class="btn btn-secondary" href="planificaciones.html">Mis archivos</a>
+          <a class="btn btn-outline" href="dashboard.html">Volver al inicio</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container page-main">
+      <section class="hero glass no-print">
+        <p class="eyebrow">Formato CDCE Portuguesa 2025-2026</p>
+        <h1>Crear Proyecto de Aprendizaje</h1>
+        <p>Los componentes, contenidos y aprendizajes esperados se toman de las guías oficiales suministradas.</p>
+      </section>
+
+      <form id="proyecto-form" class="form-card form-layout no-print" autocomplete="off">
+        <fieldset class="form-section">
+          <legend>Datos pedagógicos</legend>
+          <div class="field-grid">
+            <div class="form-group">
+              <label for="grado">Grado</label>
+              <select id="grado" name="grado" required>
+                <option value="">Seleccione</option>
+                <option value="1">1.º grado</option><option value="2">2.º grado</option>
+                <option value="3">3.º grado</option><option value="4">4.º grado</option>
+                <option value="5">5.º grado</option><option value="6">6.º grado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="seccion">Sección</label>
+              <input id="seccion" name="seccion" type="text" maxlength="20" placeholder="A" required>
+            </div>
+            <div class="form-group">
+              <label for="lapso">Lapso</label>
+              <select id="lapso" name="lapso" required>
+                <option value="">Seleccione</option>
+                <option value="I">I lapso</option>
+                <option value="II">II lapso</option>
+                <option value="III">III lapso</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="duracion">Duración</label>
+              <select id="duracion" name="duracion" required>
+                <option value="">Seleccione</option>
+                <option value="4 semanas">4 semanas</option>
+                <option value="6 semanas">6 semanas</option>
+                <option value="Todo el lapso">Todo el lapso</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fecha_inicio">Inicio</label>
+              <input id="fecha_inicio" name="fecha_inicio" type="date" required>
+            </div>
+            <div class="form-group">
+              <label for="fecha_fin">Culminación</label>
+              <input id="fecha_fin" name="fecha_fin" type="date" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="tema">Tema central</label>
+            <textarea id="tema" name="tema" maxlength="500" placeholder="Describe el tema o situación de interés del grupo" required></textarea>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Áreas de formación</legend>
+          <div id="areas-container" class="checks-grid"></div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Matrícula inicial</legend>
+          <div class="field-grid">
+            <div class="form-group">
+              <label for="matricula-v">Varones</label>
+              <input id="matricula-v" name="matricula_v" type="number" min="0" max="99" value="0" required>
+            </div>
+            <div class="form-group">
+              <label for="matricula-h">Hembras</label>
+              <input id="matricula-h" name="matricula_h" type="number" min="0" max="99" value="0" required>
+            </div>
+          </div>
+          <p>Total: <strong id="matricula-total">0</strong></p>
+        </fieldset>
+
+        <button id="generar-button" class="btn btn-primary" type="submit">✨ Generar Proyecto de Aprendizaje</button>
+      </form>
+
+      <section id="resultado-shell" class="result-shell is-hidden" aria-live="polite">
+        <div class="action-row no-print">
+          <button id="copiar-button" class="btn btn-secondary" type="button">Copiar</button>
+          <button id="word-button" class="btn btn-secondary" type="button">Descargar Word</button>
+          <button id="pdf-button" class="btn btn-secondary" type="button">Descargar PDF</button>
+          <span id="daily-button-container"></span>
+        </div>
+        <article id="resultado" class="document-preview glass"></article>
+      </section>
+    </main>
+
+    <footer class="site-footer no-print">
+      <div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div>
+    </footer>
+  </div>
+
+  <script type="module">
+    import { protegerRuta } from "./js/auth.js";
+    import { initTheme } from "./js/theme.js";
+    import {
+      generarProyectoPA,
+      actualizarAreasSelect,
+      agregarBotonPlanDiaria,
+      copiarContenido,
+      descargarWord,
+      imprimirComoPDF
+    } from "./js/proyecto.js";
+
+    initTheme();
+    protegerRuta();
+
+    const form = document.getElementById("proyecto-form");
+    const resultado = document.getElementById("resultado");
+    const shell = document.getElementById("resultado-shell");
+    const generar = document.getElementById("generar-button");
+    const v = document.getElementById("matricula-v");
+    const h = document.getElementById("matricula-h");
+    const total = document.getElementById("matricula-total");
+    const dailyContainer = document.getElementById("daily-button-container");
+
+    actualizarAreasSelect(document.getElementById("areas-container"));
+    const actualizarTotal = () => {
+      total.textContent = Number(v.value || 0) + Number(h.value || 0);
+    };
+    v.addEventListener("input", actualizarTotal);
+    h.addEventListener("input", actualizarTotal);
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      generar.disabled = true;
+      generar.textContent = "Generando…";
+      form.classList.add("loading");
+      const respuesta = await generarProyectoPA(form);
+      form.classList.remove("loading");
+      generar.disabled = false;
+      generar.textContent = "✨ Generar Proyecto de Aprendizaje";
+      if (!respuesta) return;
+
+      resultado.innerHTML = respuesta.html;
+      dailyContainer.innerHTML = "";
+      agregarBotonPlanDiaria(respuesta.registro.id, respuesta.registro.titulo, dailyContainer);
+      shell.classList.remove("is-hidden");
+      shell.scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("copiar-button").addEventListener("click", () => copiarContenido(resultado));
+    document.getElementById("word-button").addEventListener("click", () => descargarWord(resultado, "proyecto-de-aprendizaje"));
+    document.getElementById("pdf-button").addEventListener("click", imprimirComoPDF);
+  </script>
+</body>
+</html>

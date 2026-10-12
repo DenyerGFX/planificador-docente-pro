@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Genera una Unidad Diaria de Clase a partir de un Proyecto de Aprendizaje.">
+  <meta name="theme-color" content="#6d46c7">
+  <title>Planificación Diaria | Planificador Pro Docente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="header no-print">
+      <div class="container">
+        <a class="brand" href="dashboard.html"><span class="brand-mark">PD</span><span>Planificador Pro Docente</span></a>
+        <div class="header-actions">
+          <a class="btn btn-secondary" href="planificaciones.html?tab=diarias">Mis planificaciones</a>
+          <a class="btn btn-outline" href="dashboard.html">Volver al inicio</a>
+        </div>
+      </div>
+    </header>
+
+    <main class="container page-main">
+      <section class="hero glass no-print">
+        <p class="eyebrow">Formato oficial MPPE</p>
+        <h1>Unidad Diaria de Clase</h1>
+        <p>Selecciona un Proyecto de Aprendizaje y desarrolla una jornada con contenido oficial del grado.</p>
+      </section>
+
+      <form id="plan-diaria-form" class="form-card form-layout no-print" autocomplete="off">
+        <fieldset class="form-section">
+          <legend>Proyecto de origen</legend>
+          <div class="form-group">
+            <label for="pa-selector">Proyecto de Aprendizaje</label>
+            <select id="pa-selector" required><option value="">Cargando proyectos…</option></select>
+          </div>
+          <input id="pa-id" name="pa_id" type="hidden">
+          <input id="pa-nombre" name="pa_titulo" type="hidden">
+          <div class="field-grid">
+            <div class="form-group">
+              <label for="grado">Grado</label>
+              <input id="grado" name="grado" type="text" readonly required>
+            </div>
+            <div class="form-group">
+              <label for="seccion">Sección</label>
+              <input id="seccion" name="seccion" type="text" readonly>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Contenido del día</legend>
+          <div class="form-group">
+            <label for="area">Área de Formación</label>
+            <select id="area" name="area" required disabled><option value="">Seleccione área</option></select>
+          </div>
+          <div class="form-group">
+            <label for="componente">Componente</label>
+            <select id="componente" name="componente" required disabled><option value="">Seleccione componente</option></select>
+          </div>
+          <div class="form-group">
+            <label for="contenido">Contenido a desarrollar</label>
+            <select id="contenido" name="contenido" required disabled><option value="">Seleccione contenido</option></select>
+          </div>
+          <div class="field-grid">
+            <div class="form-group">
+              <label for="dia">Día</label>
+              <select id="dia" name="dia" required>
+                <option value="Lunes">Lunes</option><option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option><option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="fecha">Fecha</label>
+              <input id="fecha" name="fecha" type="date" required>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Matrícula general</legend>
+          <div class="field-grid">
+            <div class="form-group"><label for="matricula-v">Varones</label><input id="matricula-v" name="matricula_v" type="number" min="0" value="0" required></div>
+            <div class="form-group"><label for="matricula-h">Hembras</label><input id="matricula-h" name="matricula_h" type="number" min="0" value="0" required></div>
+          </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+          <legend>Asistencia del día</legend>
+          <div class="field-grid">
+            <div class="form-group"><label for="asistencia-v">Varones</label><input id="asistencia-v" name="asistencia_v" type="number" min="0" value="0" required></div>
+            <div class="form-group"><label for="asistencia-h">Hembras</label><input id="asistencia-h" name="asistencia_h" type="number" min="0" value="0" required></div>
+          </div>
+        </fieldset>
+
+        <button id="generar-button" class="btn btn-primary" type="submit">✨ Generar Planificación Diaria</button>
+      </form>
+
+      <section id="resultado-shell" class="result-shell is-hidden" aria-live="polite">
+        <div class="action-row no-print">
+          <button id="copiar-button" class="btn btn-secondary" type="button">Copiar</button>
+          <button id="word-button" class="btn btn-secondary" type="button">Descargar Word</button>
+          <button id="pdf-button" class="btn btn-secondary" type="button">Descargar PDF</button>
+        </div>
+        <article id="resultado" class="document-preview glass"></article>
+      </section>
+    </main>
+
+    <footer class="site-footer no-print"><div class="footer-line">© 2026 Planificador Pro Docente · San Rafael de Onoto.</div></footer>
+  </div>
+
+  <script type="module">
+    import { supabase } from "./js/supabase-client.js";
+    import { protegerRuta } from "./js/auth.js";
+    import { initTheme } from "./js/theme.js";
+    import { showToast } from "./js/toast.js";
+    import {
+      generarPlanificacionDiaria,
+      cargarComponentes,
+      cargarContenidos
+    } from "./js/planificacion.js";
+    import { copiarContenido, descargarWord, imprimirComoPDF } from "./js/proyecto.js";
+
+    initTheme();
+    const params = new URLSearchParams(location.search);
+    const paSolicitado = params.get("pa");
+    const form = document.getElementById("plan-diaria-form");
+    const selectorPA = document.getElementById("pa-selector");
+    const area = document.getElementById("area");
+    const componente = document.getElementById("componente");
+    const contenido = document.getElementById("contenido");
+    const resultado = document.getElementById("resultado");
+    let proyectos = [];
+
+    function aplicarPA(pa) {
+      document.getElementById("pa-id").value = pa?.id || "";
+      document.getElementById("pa-nombre").value = pa?.titulo || "";
+      document.getElementById("grado").value = pa?.grado || "";
+      document.getElementById("seccion").value = pa?.metadata?.seccion || "";
+      document.getElementById("matricula-v").value = pa?.metadata?.matricula?.v ?? 0;
+      document.getElementById("matricula-h").value = pa?.metadata?.matricula?.h ?? 0;
+      area.innerHTML = '<option value="">Seleccione área</option>';
+      (pa?.metadata?.areas || pa?.area?.split(",").map(item => item.trim()) || []).forEach(nombre => {
+        const opcion = document.createElement("option");
+        opcion.value = nombre;
+        opcion.textContent = nombre;
+        area.appendChild(opcion);
+      });
+      area.disabled = !pa;
+      componente.innerHTML = '<option value="">Seleccione componente</option>';
+      componente.disabled = true;
+      contenido.innerHTML = '<option value="">Seleccione contenido</option>';
+      contenido.disabled = true;
+    }
+
+    async function cargarProyectos() {
+      const { data, error } = await supabase
+        .from("planificaciones")
+        .select("id,titulo,grado,area,metadata")
+        .eq("tipo", "proyecto_pa")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      proyectos = data || [];
+      selectorPA.innerHTML = '<option value="">Seleccione un proyecto</option>';
+      proyectos.forEach(pa => {
+        const opcion = document.createElement("option");
+        opcion.value = pa.id;
+        opcion.textContent = `${pa.titulo} · ${pa.grado}°`;
+        selectorPA.appendChild(opcion);
+      });
+      if (!proyectos.length) {
+        showToast("Primero debes crear un Proyecto de Aprendizaje.", "warning");
+        selectorPA.innerHTML = '<option value="">No hay proyectos disponibles</option>';
+        return;
+      }
+      if (paSolicitado && proyectos.some(pa => pa.id === paSolicitado)) {
+        selectorPA.value = paSolicitado;
+        aplicarPA(proyectos.find(pa => pa.id === paSolicitado));
+      }
+    }
+
+    protegerRuta(async () => {
+      try {
+        await cargarProyectos();
+      } catch (error) {
+        console.error("Error al cargar proyectos:", error);
+        showToast("No pudimos cargar tus proyectos.", "error");
+      }
+    });
+
+    selectorPA.addEventListener("change", () => aplicarPA(proyectos.find(pa => pa.id === selectorPA.value)));
+    area.addEventListener("change", () => {
+      const componentes = cargarComponentes(componente, area.value, document.getElementById("grado").value);
+      contenido.innerHTML = '<option value="">Seleccione contenido</option>';
+      contenido.disabled = true;
+      if (!componentes.length && area.value) {
+        showToast("No hay una guía oficial cargada para esta área.", "warning");
+      }
+    });
+    componente.addEventListener("change", () => {
+      cargarContenidos(contenido, area.value, document.getElementById("grado").value, componente.value);
+    });
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const boton = document.getElementById("generar-button");
+      boton.disabled = true;
+      boton.textContent = "Generando…";
+      form.classList.add("loading");
+      const fd = new FormData(form);
+      const respuesta = await generarPlanificacionDiaria(Object.fromEntries(fd.entries()));
+      form.classList.remove("loading");
+      boton.disabled = false;
+      boton.textContent = "✨ Generar Planificación Diaria";
+      if (!respuesta) return;
+      resultado.innerHTML = respuesta.html;
+      document.getElementById("resultado-shell").classList.remove("is-hidden");
+      document.getElementById("resultado-shell").scrollIntoView({ behavior: "smooth" });
+    });
+
+    document.getElementById("copiar-button").addEventListener("click", () => copiarContenido(resultado));
+    document.getElementById("word-button").addEventListener("click", () => descargarWord(resultado, "unidad-diaria-de-clase"));
+    document.getElementById("pdf-button").addEventListener("click", imprimirComoPDF);
+  </script>
+</body>
+</html>
